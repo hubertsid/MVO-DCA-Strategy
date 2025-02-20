@@ -6,9 +6,10 @@ import matplotlib.pyplot as plt
 
 # 🏆 List of ETFs to optimize
 ETF_LIST = ["QQQ", "SPY", "VOO", "EEM", "VWO", "QQQM","IAU"]
-WEEKLY_BUDGET = 800  # Fixed investment per week
+WEEKLY_BUDGET = 20  # Fixed investment per week
 START_DATE = "2022-01-01"
 END_DATE = pd.Timestamp.today().strftime('%Y-%m-%d')
+prices = None
 
 def fetch_data():
     """Fetches historical weekly price data for ETFs from Yahoo Finance"""
@@ -66,6 +67,7 @@ def simulate_mvo_dca():
     prices = fetch_data()
     returns = compute_returns(prices)
     portfolio = {etf: 0 for etf in ETF_LIST}
+    cash_invested = 0
     investment_log = []
 
     for date, row in prices.iterrows():
@@ -155,9 +157,9 @@ def show_portfolio_holdings(portfolio, prices):
 def simulate_spy_dca():
     """Simulates a weekly investment strategy into SPY (S&P 500 ETF) using Dollar-Cost Averaging (DCA)."""
     prices = yf.download("SPY", start=START_DATE, end=END_DATE, interval="1wk")["Close"]
-    prices = prices.dropna() 
+    prices = prices.dropna()  # Usunięcie NaN, jeśli występują
 
-    portfolio = {"SPY": 0}  # Only SPY investments
+    portfolio = {"SPY": 0}  # Trzymamy tylko udziały SPY
     investment_log = []
 
     for date, price in prices.iterrows():
@@ -166,7 +168,7 @@ def simulate_spy_dca():
             continue
 
         shares = round(WEEKLY_BUDGET / price, 4)
-        portfolio["SPY"] += shares
+        portfolio["SPY"] += shares  # Dodajemy zakupione udziały
 
         investment_log.append([date.strftime('%Y-%m-%d'), "SPY", price, shares, WEEKLY_BUDGET])
 
@@ -191,7 +193,7 @@ def plot_spy_portfolio_value(df, portfolio):
     df_value = pd.DataFrame(portfolio_values, columns=["Date", "Portfolio_Value"])
     df_value["Date"] = pd.to_datetime(df_value["Date"])
 
-    # 📈 Plotting SPY values
+    # 📈 Rysowanie wykresu wartości portfela SPY DCA
     plt.figure(figsize=(10, 5))
     plt.plot(df_value["Date"], df_value["Portfolio_Value"], label="Portfolio Value (SPY DCA)", color="r", linestyle="--")
     plt.xlabel("Date")
