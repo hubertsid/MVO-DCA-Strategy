@@ -1,4 +1,4 @@
-# DCA-ETF-Autotrader
+# MVO-DCA-Strategy
 A Python-based portfolio optimizer combining Mean-Variance Optimization (MVO) and Dollar-Cost Averaging (DCA) to maximize Sharpe Ratio over time.
 
 This project implements an automated investment strategy that:
