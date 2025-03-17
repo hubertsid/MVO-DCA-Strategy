@@ -1,4 +1,4 @@
-# Investment Simulation Tool
+# MVO+CDA Simulation tool
 
 ## 📌 Project Overview
 This project is a **portfolio simulation tool** that allows users to test different investment strategies using historical ETF data. The tool utilizes financial optimization techniques to allocate capital dynamically and analyze investment performance over time.
