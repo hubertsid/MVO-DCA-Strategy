@@ -1,56 +1,48 @@
 # MVO+CDA Simulation tool
 
-## 📌 Project Overview
-This project is a **portfolio simulation tool** that allows users to test different investment strategies using historical ETF data. The tool utilizes financial optimization techniques to allocate capital dynamically and analyze investment performance over time.
+## Overview
+This project implements an **MVO (Mean-Variance Optimization) strategy** for ETF investments using **Dollar-Cost Averaging (DCA)**. The application allows users to simulate their portfolio growth over time and visualize asset allocation using **Streamlit**.
 
-## 🎯 Key Features
-- **Mean-Variance Optimization (MVO)**: Dynamically adjusts investment allocation based on risk and return.
-- **Dollar-Cost Averaging (DCA)**: Simulates a fixed weekly investment strategy.
-- **SPY Benchmark Strategy**: Compares MVO and DCA performance against a simple SPY (S&P 500) strategy.
-- **Historical Data Analysis**: Fetches and processes ETF price data from Yahoo Finance.
-- **Portfolio Visualization**: Generates plots of portfolio growth, asset distribution, and risk metrics.
-- **CSV Export**: Saves investment logs for further analysis.
+![image](https://github.com/user-attachments/assets/32bb6ed1-a0aa-4ac7-98a6-71a1037bbbc4)
 
-## ⚙️ Technologies Used
-- **Python** (NumPy, Pandas, Matplotlib, CVXPY, Yahoo Finance API)
-- **Data Analysis & Optimization**: Mean-Variance Portfolio Theory
-- **Visualization**: Matplotlib, Plotly (planned)
-- **Web Deployment (Planned)**: Streamlit for interactive user interface
+## Features
+- **MVO Investment Strategy**: Dynamically allocates weekly investments based on risk-adjusted returns.
+- **Streamlit Dashboard**: Interactive UI to customize the simulation.
+- **Custom Weekly Budget**: Users can set their preferred weekly investment amount.
+- **Portfolio Growth Visualization**: Compares portfolio performance with the S&P 500.
+- **Asset Allocation Pie Chart**: Shows ETF distribution based on current market value.
+- **Simulation Logging**: Stores investment history in CSV format for analysis.
 
-## 📊 Investment Strategies Implemented
-### 1️⃣ **Mean-Variance Optimization (MVO)**
-A dynamic asset allocation strategy based on Markowitz's Modern Portfolio Theory:
-- Minimizes portfolio risk while maintaining expected returns.
-- Allocates capital weekly based on historical price data.
-- Ensures no short-selling and weight constraints.
+![image](https://github.com/user-attachments/assets/05f2691e-91e9-4944-ba0a-8776770017a9)
 
-### 2️⃣ **Dollar-Cost Averaging (DCA)**
-A passive investment strategy that spreads investments evenly over time:
-- Fixed weekly investment into selected ETFs.
-- Helps reduce volatility risk by averaging purchase prices.
-- Simple but effective long-term strategy.
+## File Structure
+```
+DCA-ETF-Autotrader
+ ┣ app.py                 # Streamlit application
+ ┣ invest.py              # Investment strategy implementation
+ ┣ etf_data.csv           # Stored ETF historical data
+ ┣ requirements.txt        # Python dependencies
+ ┣ README.md              # Project documentation
+```
 
-### 3️⃣ **SPY Benchmark**
-A comparison model investing only in **SPY ETF**, simulating a passive S&P 500 investment:
-- Allows performance benchmarking against broader market indices.
+## Installation
+Clone the repository and install the required dependencies:
+```sh
+pip install -r requirements.txt
+```
 
-## 📈 Planned Improvements
-- **Interactive Web Dashboard** (Streamlit) 🖥️
-- **Expanded Portfolio Analysis** (Sharpe Ratio, Max Drawdown, CAGR)
-- **Alternative Asset Classes** (Cryptos, Bonds, Commodities)
-- **Backtesting with Macro Factors** (Interest rates, Inflation)
+## Usage
+Run the Streamlit application:
+```sh
+streamlit run app.py
+```
+Then, open the browser to explore the interactive investment simulator.
 
-## 🚀 How to Run the Simulation
-1. Install dependencies:
-   ```sh
-   pip install numpy pandas matplotlib cvxpy yfinance
-   ```
-2. Run the script:
-   ```sh
-   python invest.py
-   ```
-3. View the generated results in CSV or visual plots.
+## Example Simulation Results
 
----
-This is the foundation of an **interactive investment simulator**, with planned upgrades to enhance usability and real-world applicability.
+![image](https://github.com/user-attachments/assets/1090cb05-b5ee-49eb-a87c-7c6df870020d)
 
+## Built With
+- **Python** (Pandas, NumPy, CVXPY)
+- **Streamlit** (for UI)
+- **Matplotlib** (for visualization)
