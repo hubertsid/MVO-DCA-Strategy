@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 ETF_LIST = ["QQQ", "SPY", "VOO", "EEM", "VWO", "QQQM", "IAU"]
-WEEKLY_BUDGET = 20
 START_DATE = "2022-01-01"
 END_DATE = pd.Timestamp.today().strftime('%Y-%m-%d')
 
@@ -38,8 +37,9 @@ def mean_variance_optimization(returns):
     weights = np.array(w.value) if w.value is not None else np.full(num_assets, 1 / num_assets)
     return weights / np.sum(weights)
 
-def simulate(strategy, start_date=START_DATE, end_date=END_DATE):
+def simulate(strategy, start_date=START_DATE, end_date=END_DATE, weekly_budget=20):
     """Simulates a weekly investment strategy based on the selected method."""
+    print(start_date)
     prices = fetch_data()
     prices = prices.loc[start_date:end_date]
     returns = compute_returns(prices)
@@ -58,9 +58,9 @@ def simulate(strategy, start_date=START_DATE, end_date=END_DATE):
         else:
             raise ValueError("Invalid strategy. Choose 'MVO' or 'SPY'.")
 
-        raw_allocations = WEEKLY_BUDGET * optimal_weights
+        raw_allocations = weekly_budget * optimal_weights
         rounded_allocations = np.round(raw_allocations, 2)
-        difference = WEEKLY_BUDGET - np.sum(rounded_allocations)
+        difference = weekly_budget - np.sum(rounded_allocations)
         if difference != 0:
             max_index = np.argmax(raw_allocations)
             rounded_allocations[max_index] += difference
@@ -111,11 +111,10 @@ def plot_portfolio_pie(portfolio):
     plt.title("Portfolio Allocation by Value")
     plt.show()
 
-
-df_mvo, portfolio_mvo = simulate("MVO")
+df_mvo, portfolio_mvo = simulate("MVO", weekly_budget=20)
 plot_results(df_mvo, portfolio_mvo, "MVO")
 plot_portfolio_pie(portfolio_mvo)
 
-df_spy, portfolio_spy = simulate("SPY")
+df_spy, portfolio_spy = simulate("SPY", weekly_budget=20)
 plot_results(df_spy, portfolio_spy, "SPY")
 plot_portfolio_pie(portfolio_spy)
