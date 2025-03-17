@@ -13,8 +13,6 @@ This project implements an **MVO (Mean-Variance Optimization) strategy** for ETF
 - **Asset Allocation Pie Chart**: Shows ETF distribution based on current market value.
 - **Simulation Logging**: Stores investment history in CSV format for analysis.
 
-![image](https://github.com/user-attachments/assets/05f2691e-91e9-4944-ba0a-8776770017a9)
-
 ## File Structure
 ```
 DCA-ETF-Autotrader
