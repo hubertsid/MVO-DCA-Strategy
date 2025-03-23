@@ -38,6 +38,10 @@ Then, open the browser to explore the interactive investment simulator.
 
 ## Example Simulation Results
 
+Portfolio Value Over time
+![image](https://github.com/user-attachments/assets/d269edb4-c278-40da-b174-1c7b0d822122)
+
+Investments distribution
 ![image](https://github.com/user-attachments/assets/1090cb05-b5ee-49eb-a87c-7c6df870020d)
 
 ## Built With
