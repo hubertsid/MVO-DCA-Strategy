@@ -1,9 +1,9 @@
 # MVO+CDA Simulation tool
 
 ## Overview
-This project implements an **MVO (Mean-Variance Optimization) strategy** for ETF investments using **Dollar-Cost Averaging (DCA)**. The application allows users to simulate their portfolio growth over time and visualize asset allocation using **Streamlit**.
+This project implements an **MVO (Mean-Variance Optimization) strategy** for ETF investments using **Dollar-Cost Averaging (DCA)**. The application allows users to simulate their portfolio growth over time( using past data ) and visualize asset allocation using **Streamlit**.
 
-![image](https://github.com/user-attachments/assets/32bb6ed1-a0aa-4ac7-98a6-71a1037bbbc4)
+![image](https://github.com/user-attachments/assets/3a79dcda-1b2f-4ea0-8b84-bdab35105a89)
 
 ## Features
 - **MVO Investment Strategy**: Dynamically allocates weekly investments based on risk-adjusted returns.
