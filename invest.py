@@ -4,8 +4,12 @@ import cvxpy as cp
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-ETF_LIST = ["QQQ", "SPY", "VOO", "EEM", "VWO", "QQQM", "IAU"]
-START_DATE = "2022-01-01"
+ETF_LIST = [
+    "QQQ", "TQQQ", "SPY", "VOO", "VTI", "DIA", "IAU",
+    "EEM", "VWO", "XLK", "XLV", "XLF", "XLY", "XLE", "SMH"
+]
+
+START_DATE = "2010-09-09"
 END_DATE = pd.Timestamp.today().strftime('%Y-%m-%d')
 
 def fetch_data():
@@ -37,24 +41,35 @@ def mean_variance_optimization(returns):
     weights = np.array(w.value) if w.value is not None else np.full(num_assets, 1 / num_assets)
     return weights / np.sum(weights)
 
-def simulate(strategy, start_date=START_DATE, end_date=END_DATE, weekly_budget=20):
+def simulate(strategy, etf_list=ETF_LIST, start_date=START_DATE, end_date=END_DATE, weekly_budget=20):
     """Simulates a weekly investment strategy based on the selected method."""
-    print(start_date)
     prices = fetch_data()
-    prices = prices.loc[start_date:end_date]
+    prices = prices.loc[start_date:end_date, etf_list]
     returns = compute_returns(prices)
-    portfolio = {etf: 0 for etf in ETF_LIST}
+    portfolio = {etf: 0 for etf in etf_list}
     investment_log = []
 
     for date, row in prices.iterrows():
-        if date not in returns.index:
+        if date not in returns.index or date.weekday() != 0:
             continue
 
         if strategy == "MVO":
             returns_so_far = returns.loc[:date].dropna()
-            optimal_weights = mean_variance_optimization(returns_so_far)
+            valid_columns = returns_so_far.columns[~returns_so_far.iloc[-1].isna()]
+            if len(valid_columns) < 2:
+                continue
+
+            filtered_returns = returns_so_far[valid_columns]
+            optimal_weights_sub = mean_variance_optimization(filtered_returns)
+
+            optimal_weights = np.zeros(len(etf_list))
+            for i, etf in enumerate(etf_list):
+                if etf in valid_columns:
+                    idx = list(valid_columns).index(etf)
+                    optimal_weights[i] = optimal_weights_sub[idx]
+
         elif strategy == "SPY":
-            optimal_weights = np.array([1.0 if etf == "SPY" else 0.0 for etf in ETF_LIST])
+            optimal_weights = np.array([1.0 if etf == "SPY" else 0.0 for etf in etf_list])
         else:
             raise ValueError("Invalid strategy. Choose 'MVO' or 'SPY'.")
 
@@ -65,56 +80,112 @@ def simulate(strategy, start_date=START_DATE, end_date=END_DATE, weekly_budget=2
             max_index = np.argmax(raw_allocations)
             rounded_allocations[max_index] += difference
 
-        for i, etf in enumerate(ETF_LIST):
+        for i, etf in enumerate(etf_list):
             price = row[etf]
             if not np.isnan(price) and rounded_allocations[i] > 0:
                 shares = round(rounded_allocations[i] / price, 4)
                 portfolio[etf] += shares
-                investment_log.append([date.strftime('%Y-%m-%d'), etf, price, shares, rounded_allocations[i]])
+                investment_log.append([
+                    date.strftime('%Y-%m-%d'), etf, price, shares, rounded_allocations[i]
+                ])
 
     df = pd.DataFrame(investment_log, columns=["Date", "ETF", "Price", "Shares", "Total_Invested"])
     file_name = "simulation_results.csv" if strategy == "MVO" else "spy_dca_simulation.csv"
     df.to_csv(file_name, index=False)
     return df, portfolio
 
-def plot_results(df, portfolio, strategy):
-    """Plots the total portfolio value over time."""
-    prices = fetch_data()
-    portfolio_values = []
-    for date, row in prices.iterrows():
-        value = sum(portfolio.get(etf, 0) * row[etf] for etf in ETF_LIST if etf in portfolio and not pd.isna(row[etf]))
-        portfolio_values.append([date, value])
+def build_portfolio_history(investment_df, etf_list=ETF_LIST):
+    """Returns history of portfolio values"""
+    investment_df["Date"] = pd.to_datetime(investment_df["Date"])
+    investment_df = investment_df.sort_values("Date")
     
-    df_value = pd.DataFrame(portfolio_values, columns=["Date", "Portfolio_Value"])
-    df_value["Date"] = pd.to_datetime(df_value["Date"])
-    df_value = df_value.dropna()
-    
-    plt.figure(figsize=(10, 5))
-    sns.lineplot(data=df_value, x="Date", y="Portfolio_Value", label=f"Portfolio Value ({strategy})")
-    plt.xlabel("Date")
-    plt.ylabel("Value in USD")
-    plt.title(f"Portfolio Value Over Time ({strategy})")
-    plt.legend()
-    plt.grid()
-    plt.show()
+    dates = investment_df["Date"].unique()
+    portfolio_history = []
+    portfolio = {etf: 0 for etf in etf_list}
 
-def plot_portfolio_pie(portfolio):
-    """Plots the portfolio allocation as a pie chart based on total investment value."""
+    for date in dates:
+        day_data = investment_df[investment_df["Date"] == date]
+        for _, row in day_data.iterrows():
+            portfolio[row["ETF"]] += row["Shares"]
+        snapshot = {"Date": date}
+        snapshot.update(portfolio.copy())
+        portfolio_history.append(snapshot)
+
+    return pd.DataFrame(portfolio_history)
+
+def compute_portfolio_value(portfolio_history_df, prices_df, etf_list=ETF_LIST):
+    """Calculates final value"""
+    prices_df = prices_df.copy()
+    prices_df.index = pd.to_datetime(prices_df.index)
+
+    etf_list = [etf for etf in etf_list if etf in prices_df.columns]
+
+    history = portfolio_history_df.copy()
+    history["Date"] = pd.to_datetime(history["Date"])
+    history = history.set_index("Date")
+    common_dates = history.index.intersection(prices_df.index)
+
+    history = history.loc[common_dates]
+    prices_df = prices_df.loc[common_dates, etf_list]
+
+    portfolio_values = (history[etf_list] * prices_df[etf_list]).sum(axis=1).reset_index()
+    portfolio_values.columns = ["Date", "Portfolio_Value"]
+    return portfolio_values
+
+
+def plot_results(portfolio_values_df, strategy):
+    fig, ax = plt.subplots(figsize=(6, 4))
+    sns.lineplot(data=portfolio_values_df, x="Date", y="Portfolio_Value", label=f"Portfolio Value ({strategy})", ax=ax)
+    ax.set_xlabel("Date")
+    ax.set_ylabel("Value in USD")
+    ax.set_title(f"Portfolio Value Over Time ({strategy})")
+    ax.grid(True)
+    ax.legend()
+    return fig
+
+def plot_portfolio_pie(portfolio, etf_list=ETF_LIST):
     prices = fetch_data()
     latest_prices = prices.iloc[-1] 
 
-    portfolio_values = {etf: portfolio[etf] * latest_prices[etf] for etf in portfolio if not pd.isna(latest_prices[etf])}
+    portfolio_values = {
+        etf: portfolio[etf] * latest_prices[etf]
+        for etf in etf_list
+        if etf in portfolio and not pd.isna(latest_prices[etf])
+    }
+
     total_value = sum(portfolio_values.values())
+    if total_value == 0:
+        return None
 
-    plt.figure(figsize=(8, 8))
-    plt.pie(portfolio_values.values(), labels=portfolio_values.keys(), autopct='%1.1f%%', startangle=140)
-    plt.title("Portfolio Allocation by Value")
-    plt.show()
+    fig, ax = plt.subplots(figsize=(5, 5))
+    ax.pie(portfolio_values.values(), labels=portfolio_values.keys(), autopct='%1.1f%%', startangle=140)
+    ax.set_title("Portfolio Allocation by Value")
+    return fig
 
-df_mvo, portfolio_mvo = simulate("MVO", weekly_budget=20)
-plot_results(df_mvo, portfolio_mvo, "MVO")
-plot_portfolio_pie(portfolio_mvo)
+def compare_strategies_plot(value_mvo, value_spy, weekly_budget=20):
+    start_date = min(value_mvo["Date"].min(), value_spy["Date"].min())
+    end_date = max(value_mvo["Date"].max(), value_spy["Date"].max())
+    date_range = pd.date_range(start=start_date, end=end_date, freq='W-MON')
 
-df_spy, portfolio_spy = simulate("SPY", weekly_budget=20)
-plot_results(df_spy, portfolio_spy, "SPY")
-plot_portfolio_pie(portfolio_spy)
+    cash_df = pd.DataFrame({"Date": date_range})
+    cash_df["Portfolio_Value"] = (cash_df.index + 1) * weekly_budget
+
+    value_mvo = value_mvo.copy()
+    value_mvo["Strategy"] = "MVO"
+
+    value_spy = value_spy.copy()
+    value_spy["Strategy"] = "S&P500 DCA"
+
+    cash_df = cash_df.copy()
+    cash_df["Strategy"] = "Cash Only"
+
+    combined = pd.concat([value_mvo, value_spy, cash_df])
+
+    fig, ax = plt.subplots(figsize=(8, 4))
+    sns.lineplot(data=combined, x="Date", y="Portfolio_Value", hue="Strategy", ax=ax)
+    ax.set_title("Portfolio Value Comparison Over Time")
+    ax.set_xlabel("Date")
+    ax.set_ylabel("Portfolio Value (USD)")
+    ax.grid(True)
+    ax.legend(title="Strategy")
+    return fig
