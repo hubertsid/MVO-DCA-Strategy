@@ -26,6 +26,12 @@ DCA-ETF-Autotrader
 ## Installation
 Clone the repository and install the required dependencies:
 ```sh
+git clone https://github.com/hubertsid/MVO-DCA-Strategy
+```
+```sh
+cd MVO-DCA-Strategy
+```
+```sh
 pip install -r requirements.txt
 ```
 
